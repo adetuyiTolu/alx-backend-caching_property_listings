@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django_redis',
+    "properties",
 ]
 
 MIDDLEWARE = [
@@ -73,9 +75,23 @@ WSGI_APPLICATION = "alx_backend_caching_property_listings.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'property_db',
+        'USER': 'property_user',
+        'PASSWORD': 'property_pass',
+        'HOST': '127.0.0.1',  # matches docker-compose service name
+        'PORT': 5432,
+    }
+}
+
+CACHES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",  # matches docker-compose service name
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
 
