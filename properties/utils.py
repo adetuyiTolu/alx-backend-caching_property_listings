@@ -8,23 +8,26 @@ def get_redis_cache_metrics():
     """
     Retrieve Redis cache hit/miss metrics and calculate hit ratio.
     """
-    # Get the underlying Redis client
-    redis_client = cache.client.get_client(write=True)
+    try:
+        redis_client = cache.client.get_client(write=True)
+        info = redis_client.info("stats")
+        hits = info.get("keyspace_hits", 0)
+        misses = info.get("keyspace_misses", 0)
+        total_requests = hits + misses
+        hit_ratio = (hits / total_requests) if total_requests > 0 else 0
 
-    info = redis_client.info("stats")
-    hits = info.get("keyspace_hits", 0)
-    misses = info.get("keyspace_misses", 0)
-    total = hits + misses
-    hit_ratio = (hits / total) if total > 0 else 0.0
+        metrics = {
+            "hits": hits,
+            "misses": misses,
+            "hit_ratio": round(hit_ratio, 4)
+        }
 
-    metrics = {
-        "hits": hits,
-        "misses": misses,
-        "hit_ratio": round(hit_ratio, 4)
-    }
+        logger.info(f"Redis Cache Metrics: Hits={hits}, Misses={misses}, Hit Ratio={metrics['hit_ratio']}")
+        return metrics
 
-    logger.info(f"Redis Cache Metrics: Hits={hits}, Misses={misses}, Hit Ratio={metrics['hit_ratio']}")
-    return metrics
+    except Exception as e:
+        logger.error(f"Failed to retrieve Redis metrics: {e}")
+        return {"hits": 0, "misses": 0, "hit_ratio": 0}
 
 def get_all_properties():
     # Try to get cached queryset
